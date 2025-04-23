@@ -100,7 +100,7 @@ MONGODB_URL='your-mongodb-url'
 RESEND_KEY='your-resend-key'
 NEXT_PUBLIC_API_BASE_URL='http://localhost:3000'
 NEXTAUTH_SECRET='your-nextauth-secret'
-NVIDIA_API_KEY='your-nvidia-api-key'  https://build.nvidia.com/nvidia/molmim-generate
+NVIDIA_API_KEY='your-nvidia-api-key' 
 NEXT_PUBLIC_ABLY_API_KEY='your-ably-api-key'
 ```
 You can access the [molmin-api](https://build.nvidia.com/nvidia/molmim-generate) here.
