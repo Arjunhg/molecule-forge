@@ -97,7 +97,7 @@ const Sidebar = ({sidebarOpen, setSidebarOpen}: SidebarProps) => {
                                     exit={{ opacity: 0 }}
                                     className="text-xl font-bold text-primary"
                                 >
-                                    PharmaQuest
+                                    Molecule-Forge
                                 </motion.span>
                             )}
                         </motion.div>
@@ -148,7 +148,7 @@ const Sidebar = ({sidebarOpen, setSidebarOpen}: SidebarProps) => {
                         </div>
                         {!isCollapsed && (
                             <div className="ml-3">
-                                <p className="text-sm font-medium text-text dark:text-white">PharmaQuest</p>
+                                <p className="text-sm font-medium text-text dark:text-white">Molecule-Forge</p>
                                 <p className="text-xs text-text-light dark:text-text">v1.0.0</p>
                             </div>
                         )}

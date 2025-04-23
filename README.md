@@ -9,7 +9,7 @@
 
 ## <a name="introduction">🤖 Introduction</a>
 
-**Pharma Quest** is a drug discovery and protein-binding prediction tool built with the latest in machine learning and natural language processing (NLP) technology. Powered by NVIDIA NIM and protein structure prediction models, this project enables users to simulate molecular interactions and predict protein structures.
+**Molecule-Forge** is a drug discovery and protein-binding prediction tool built with the latest in machine learning and natural language processing (NLP) technology. Powered by NVIDIA NIM and protein structure prediction models, this project enables users to simulate molecular interactions and predict protein structures.
 
 The platform is designed to help researchers accelerate drug discovery by leveraging cutting-edge AI models for protein folding, docking, and molecular dynamics.
 
@@ -46,8 +46,8 @@ Make sure you have the following installed on your machine:
 ### **Cloning the Repository**
 
 ```bash
-git clone https://github.com/Arjunhg/pharma-quest.git
-cd pharma-quest
+git clone https://github.com/Arjunhg/molecule-forge.git
+cd molecule-forge
 ```
 
 ### **Installation**
