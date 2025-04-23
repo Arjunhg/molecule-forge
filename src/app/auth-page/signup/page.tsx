@@ -11,7 +11,10 @@ import {
   LockIcon,
   MailIcon,
   UserIcon,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const SignUp: React.FC = () => {
   const [user, setUser] = useState({
@@ -25,8 +28,10 @@ const SignUp: React.FC = () => {
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [errors, setErrors] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -34,13 +39,31 @@ const SignUp: React.FC = () => {
     const { name, value } = e.target;
     setUser((prev) => ({
       ...prev,
-      [name]: value, // Ensure the value is treated as a string
+      [name]: value,
     }));
+    
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
     setImageFile(file);
+    
+    // Clear error for photo when user selects a file
+    if (errors.photo) {
+      setErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors.photo;
+        return newErrors;
+      });
+    }
   };
 
   const convertImageToBase64 = async (file: File): Promise<string> => {
@@ -58,22 +81,39 @@ const SignUp: React.FC = () => {
 
   // Validate form fields
   const validateForm = useCallback(() => {
-    if (
-      !user.email ||
-      !user.firstName ||
-      !user.lastName ||
-      !user.password ||
-      !user.confirmPassword
-    ) {
-      return "Please fill in all the fields.";
+    const newErrors: Record<string, string> = {};
+    
+    if (!user.firstName.trim()) {
+      newErrors.firstName = "First name is required";
     }
-    if (user.password !== user.confirmPassword) {
-      return "Passwords do not match.";
+    
+    if (!user.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
+    
+    if (!user.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    
+    if (!user.password) {
+      newErrors.password = "Password is required";
+    } else if (user.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    
+    if (!user.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (user.password !== user.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+    
     if (!imageFile) {
-      return "Please upload a profile picture.";
+      newErrors.photo = "Profile picture is required";
     }
-    return null;
+    
+    return newErrors;
   }, [user, imageFile]);
 
   let isSubmitting = false;
@@ -84,16 +124,17 @@ const SignUp: React.FC = () => {
     isSubmitting = true;
 
     setIsLoading(true);
+    setSuccessMessage(null);
 
-    const formError = validateForm();
-    if (formError) {
-      setErrors(formError);
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
       setIsLoading(false);
       isSubmitting = false;
       return;
     }
 
-    setErrors(null);
+    setErrors({});
 
     try {
       let base64Image = "";
@@ -106,24 +147,31 @@ const SignUp: React.FC = () => {
         photo: base64Image,
       };
 
-      console.log(newUser);
       const createdUser = await createUser(newUser);
-      console.log(createdUser);
-
-      setUser({
-        email: "",
-        firstName: "",
-        lastName: "",
-        password: "",
-        confirmPassword: "",
-        photo: "",
-        userBio: "",
-      });
-      setImageFile(null);
-      setIsLoading(false);
-    } catch (error) {
+      
+      if (createdUser) {
+        setSuccessMessage("Account created successfully! Please check your email to verify your account.");
+        
+        // Reset form after successful submission
+        setUser({
+          email: "",
+          firstName: "",
+          lastName: "",
+          password: "",
+          confirmPassword: "",
+          photo: "",
+          userBio: "",
+        });
+        setImageFile(null);
+        
+        // Redirect to sign in page after 3 seconds
+        setTimeout(() => {
+          router.push("/auth-page/signin");
+        }, 3000);
+      }
+    } catch (error: any) {
       console.error("Error registering user:", error);
-      setErrors("Registration failed.");
+      setErrors({ submit: error.message || "Registration failed. Please try again." });
     } finally {
       isSubmitting = false;
       setIsLoading(false);
@@ -290,10 +338,24 @@ const SignUp: React.FC = () => {
                 Sign Up to Pharma-Quest
               </h2>
 
+              {successMessage && (
+                <div className="mb-4 flex items-center rounded-md bg-green-50 p-4 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <CheckCircle className="mr-2 h-5 w-5" />
+                  <p>{successMessage}</p>
+                </div>
+              )}
+
+              {errors.submit && (
+                <div className="mb-4 flex items-center rounded-md bg-red-50 p-4 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                  <AlertCircle className="mr-2 h-5 w-5" />
+                  <p>{errors.submit}</p>
+                </div>
+              )}
+
               <div>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    First Name
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -302,18 +364,23 @@ const SignUp: React.FC = () => {
                       value={user.firstName}
                       onChange={handleInputChange}
                       placeholder="Enter your first name"
-                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      className={`w-full rounded-lg border ${
+                        errors.firstName ? "border-red-500" : "border-stroke"
+                      } bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary`}
                     />
 
                     <span className="absolute right-4 top-4">
                       <UserIcon />
                     </span>
                   </div>
+                  {errors.firstName && (
+                    <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Last Name
+                    Last Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -322,17 +389,22 @@ const SignUp: React.FC = () => {
                       value={user.lastName}
                       onChange={handleInputChange}
                       placeholder="Enter your last name"
-                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      className={`w-full rounded-lg border ${
+                        errors.lastName ? "border-red-500" : "border-stroke"
+                      } bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary`}
                     />
 
                     <span className="absolute right-4 top-4">
                       <UserIcon />
                     </span>
                   </div>
+                  {errors.lastName && (
+                    <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -341,18 +413,23 @@ const SignUp: React.FC = () => {
                       value={user.email}
                       onChange={handleInputChange}
                       placeholder="Enter your email"
-                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      className={`w-full rounded-lg border ${
+                        errors.email ? "border-red-500" : "border-stroke"
+                      } bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary`}
                     />
 
                     <span className="absolute right-4 top-4">
                       <MailIcon />
                     </span>
                   </div>
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Password
+                    Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -360,19 +437,24 @@ const SignUp: React.FC = () => {
                       name="password"
                       value={user.password}
                       onChange={handleInputChange}
-                      placeholder="Enter your password"
-                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      placeholder="Enter your password (min. 6 characters)"
+                      className={`w-full rounded-lg border ${
+                        errors.password ? "border-red-500" : "border-stroke"
+                      } bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary`}
                     />
 
                     <span className="absolute right-4 top-4">
                       <LockIcon />
                     </span>
                   </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                  )}
                 </div>
 
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Confirm Password
+                    Confirm Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -381,12 +463,17 @@ const SignUp: React.FC = () => {
                       value={user.confirmPassword}
                       onChange={handleInputChange}
                       placeholder="Re-enter your password"
-                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      className={`w-full rounded-lg border ${
+                        errors.confirmPassword ? "border-red-500" : "border-stroke"
+                      } bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary`}
                     />
                     <span className="absolute right-4 top-4">
                       <LockIcon />
                     </span>
                   </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -406,7 +493,7 @@ const SignUp: React.FC = () => {
 
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Profile Picture
+                    Profile Picture <span className="text-red-500">*</span>
                   </label>
                   <div className="relative flex items-center justify-center">
                     {/* Hidden file input */}
@@ -423,19 +510,22 @@ const SignUp: React.FC = () => {
                       onClick={() =>
                         document.getElementById("fileInput")?.click()
                       }
-                      className="flex cursor-pointer flex-col items-center"
+                      className={`flex cursor-pointer flex-col items-center p-4 border-2 border-dashed rounded-lg ${
+                        errors.photo ? "border-red-500" : "border-gray-300"
+                      }`}
                     >
                       {/* Replace with any icon or image */}
                       <CameraIcon size={25} />
                       <span className="text-gray-500 mt-2 text-sm">
-                        Choose Profile Picture
+                        {imageFile ? imageFile.name : "Choose Profile Picture"}
                       </span>
                     </div>
                   </div>
+                  {errors.photo && (
+                    <p className="mt-1 text-sm text-red-500">{errors.photo}</p>
+                  )}
                 </div>
 
-                {!errors && <div className="mb-4 text-red">{errors}</div>}
-                {errors && <div className="mb-4 text-green">Sign Up Successfull, Please Sign In now.</div>}
                 <div className="mb-5">
                   <button
                     type="submit"
