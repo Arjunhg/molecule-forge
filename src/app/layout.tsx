@@ -7,7 +7,7 @@ import { SessionProvider } from "next-auth/react";
 import { UserProvider } from "./context/UserContext";
 import * as Ably from "ably";
 import { ChannelProvider, AblyProvider } from "ably/react";
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/next';
 
 
 export default function RootLayout({
