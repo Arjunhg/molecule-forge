@@ -14,7 +14,7 @@ export async function createUser(user: CreateUserParams) {
 
     const existingUser = await User.findOne({ email: user.email });
     if (existingUser) {
-      throw new Error("User already exists with this email");
+      return { error: "User already exists with this email" };
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -35,11 +35,8 @@ export async function createUser(user: CreateUserParams) {
 
     return JSON.parse(JSON.stringify(newUser));
   } catch (error: any) {
-    console.log(error);
-    handleError(error);
-    throw new Error(
-      error.message || "An error occurred during user registration",
-    );
+    console.error("User creation error:", error);
+    return { error: error.message || "An error occurred during user registration" };
   }
 }
 

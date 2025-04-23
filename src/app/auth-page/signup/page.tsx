@@ -147,9 +147,14 @@ const SignUp: React.FC = () => {
         photo: base64Image,
       };
 
-      const createdUser = await createUser(newUser);
+      const result = await createUser(newUser);
       
-      if (createdUser) {
+      if (result.error) {
+        setErrors({ submit: result.error });
+        return;
+      }
+      
+      if (result) {
         setSuccessMessage("Account created successfully! Please check your email to verify your account.");
         
         // Reset form after successful submission
