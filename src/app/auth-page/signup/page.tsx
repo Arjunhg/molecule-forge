@@ -155,7 +155,7 @@ const SignUp: React.FC = () => {
       }
       
       if (result) {
-        setSuccessMessage("Account created successfully! Please check your email to verify your account.");
+        setSuccessMessage("Account created successfully! You can now sign in.");
         
         // Reset form after successful submission
         setUser({

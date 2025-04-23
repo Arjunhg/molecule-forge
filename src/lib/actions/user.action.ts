@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import User from "../database/models/user.model";
 import { connectToDatabase } from "../database/mongoose";
 import { handleError } from "../utils";
-import { sendVerificationEmail, sendResetPasswordEmail } from "./email.actions";
+import { sendResetPasswordEmail } from "./email.actions";
 
 // this CreateUserParams types is from index.d.ts
 export async function createUser(user: CreateUserParams) {
@@ -24,14 +24,8 @@ export async function createUser(user: CreateUserParams) {
       ...user,
       password: hashedPassword,
       userBio: user.userBio || "",
+      isEmailVerified: true,
     });
-
-    const verificationUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/verify-email?token=${newUser._id}`;
-    await sendVerificationEmail(
-      newUser.email,
-      newUser.firstName || "User",
-      verificationUrl,
-    );
 
     return JSON.parse(JSON.stringify(newUser));
   } catch (error: any) {
@@ -60,22 +54,6 @@ export async function loginUser(email: string, password: string) {
   } catch (error) {
     console.error("Login error:", error);
     throw error;
-  }
-}
-
-export async function verifyEmail(token: string) {
-  try {
-    await connectToDatabase();
-
-    const user = await User.findById(token);
-    if (!user) throw new Error("Invalid token or user not found");
-
-    user.isEmailVerified = true;
-    await user.save();
-
-    return JSON.parse(JSON.stringify(user));
-  } catch (error) {
-    handleError(error);
   }
 }
 
