@@ -10,11 +10,6 @@
 8. 📊 [Dashboard & Analytics](#dashboard)
 9. 🤝 [Contributing](#contributing)
 
-## 🔗 Contact
-
-- 📺 **YouTube**: [Watch the demo](https://youtu.be/I6-UZobx858)
-- 💬 **Discord**: `nemsj`
-
 
 ## <a name="introduction">🤖 Introduction</a>
 
