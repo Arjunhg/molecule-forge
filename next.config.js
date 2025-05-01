@@ -4,6 +4,11 @@ const CopyPlugin = require("copy-webpack-plugin");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb"
+    }
+  },
   output: "standalone",
   webpack(config, { isServer }) {
     config.plugins.push(
