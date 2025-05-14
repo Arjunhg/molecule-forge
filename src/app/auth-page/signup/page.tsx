@@ -42,7 +42,6 @@ const SignUp: React.FC = () => {
       [name]: value,
     }));
     
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = {...prev};
@@ -56,7 +55,6 @@ const SignUp: React.FC = () => {
     const file = e.target.files ? e.target.files[0] : null;
     setImageFile(file);
     
-    // Clear error for photo when user selects a file
     if (errors.photo) {
       setErrors(prev => {
         const newErrors = {...prev};
@@ -78,8 +76,6 @@ const SignUp: React.FC = () => {
       };
     });
   };
-
-  // Validate form fields
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
     
@@ -157,7 +153,6 @@ const SignUp: React.FC = () => {
       if (result) {
         setSuccessMessage("Account created successfully! You can now sign in.");
         
-        // Reset form after successful submission
         setUser({
           email: "",
           firstName: "",
@@ -169,7 +164,6 @@ const SignUp: React.FC = () => {
         });
         setImageFile(null);
         
-        // Redirect to sign in page after 3 seconds
         setTimeout(() => {
           router.push("/auth-page/signin");
         }, 3000);
